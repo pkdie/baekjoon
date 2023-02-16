@@ -1,66 +1,54 @@
 import sys
 from collections import deque
 
-input = sys.stdin.readline
-r, c = map(int, input().split())
+R, C = map(int, sys.stdin.readline().split())
+
 graph = []
+for _ in range(R):
+    graph.append(list(sys.stdin.readline().strip()))
 
-q_j = deque()
-q_f = deque()
+f_queue = deque()
+j_queue = deque()
 
-visited_j = [[0] * c for _ in range(r)]
-visited_f = [[0] * c for _ in range(r)]
+f_visited = [[0] * C for _ in range(R)]
+j_visited = [[0] * C for _ in range(R)]
 
-move = [
-    [1, 0],
-    [-1, 0],
-    [0, 1],
-    [0, -1]
-]
+dx = [-1, 1, 0, 0]
+dy = [0, 0, -1, 1]
 
-for i in range(r):
-    temp = list(input())
-
-    for j in range(len(temp)):
-        if temp[j] == "J":
-            q_j.append((i, j))
-            visited_j[i][j] = 1
-
-        elif temp[j] == "F":
-            q_f.append((i, j))
-            visited_f[i][j] = 1
-
-    graph.append(temp)
-
+for i in range(R):
+    for j in range(C):
+        if graph[i][j] == 'F':
+            f_queue.append((i, j))
+            f_visited[i][j] = 1
+        if graph[i][j] == 'J':
+            j_queue.append((i, j))
+            j_visited[i][j] = 1
 
 def bfs():
-    while q_f:
-        x, y = q_f.popleft()
-
+    while f_queue:
+        x, y = f_queue.popleft()
         for i in range(4):
-            nx, ny = x + move[i][0], y + move[i][1]
+            nx = x + dx[i]
+            ny = y + dy[i]
+            if nx < 0 or nx >= R or ny < 0 or ny >= C:
+                continue
+            if f_visited[nx][ny] != 0 or graph[nx][ny] == '#':
+                continue
+            f_visited[nx][ny] = f_visited[x][y] + 1
+            f_queue.append((nx, ny))
 
-            if 0 <= nx < r and 0 <= ny < c:
-                if not visited_f[nx][ny] and graph[nx][ny] != "#":
-                    visited_f[nx][ny] = visited_f[x][y] + 1
-                    q_f.append((nx, ny))
-
-    while q_j:
-        x, y = q_j.popleft()
-
+    while j_queue:
+        x, y = j_queue.popleft()
         for i in range(4):
-            nx, ny = x + move[i][0], y + move[i][1]
-
-            if 0 <= nx < r and 0 <= ny < c:
-                if graph[nx][ny] != "#" and not visited_j[nx][ny]:
-                    if not visited_f[nx][ny] or visited_f[nx][ny] > visited_j[x][y] + 1:
-                        visited_j[nx][ny] = visited_j[x][y] + 1
-                        q_j.append((nx, ny))
-
-            else:
-                return visited_j[x][y]
-
-    return "IMPOSSIBLE"
-
+            nx = x + dx[i]
+            ny = y + dy[i]
+            if nx < 0 or ny < 0 or nx >= R or ny >= C:
+                return j_visited[x][y]
+            if j_visited[nx][ny] != 0 or graph[nx][ny] == '#' or (f_visited[nx][ny] != 0 and f_visited[nx][ny] <= j_visited[x][y] + 1):
+                continue
+            j_visited[nx][ny] = j_visited[x][y] + 1
+            j_queue.append((nx, ny))
+    return 'IMPOSSIBLE'
 
 print(bfs())
